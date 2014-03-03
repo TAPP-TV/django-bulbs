@@ -1,11 +1,14 @@
+import json
+
+import requests
 from django.contrib.contenttypes.models import ContentType
 from django.db import models, DEFAULT_DB_ALIAS
 from django.template.defaultfilters import slugify
-
-from bulbs.indexable.conf import settings
-
 from elasticutils import S, MappingType, SearchResults
 from elasticutils import get_es
+from pyelasticsearch.client import JsonEncoder
+
+from bulbs.indexable.conf import settings
 
 from .models import polymorphic_indexable_registry
 
@@ -316,19 +319,22 @@ class PolymorphicIndexable(object):
                 sub_indexes[key].update(subclass.get_index_mappings())
         return indexes
 
-    def index(self, refresh=False):
-        es = self.get_es()
-        doc = self.extract_document()
-        # NOTE: this could be made more efficient with the `doc_as_upsert`
-        # param when the following pull request is merged into pyelasticsearch:
-        # https://github.com/rhec/pyelasticsearch/pull/132
-        es.update(
-            self.get_index_name(),
-            self.get_mapping_type_name(),
-            self.id,
-            doc=doc,
-            upsert=doc
-        )
+    def index(self, refresh=False, use_river=True):
+        if use_river:
+            index_via_rmq_river(self)
+        else:
+            es = self.get_es()
+            doc = self.extract_document()
+            # NOTE: this could be made more efficient with the `doc_as_upsert`
+            # param when the following pull request is merged into pyelasticsearch:
+            # https://github.com/rhec/pyelasticsearch/pull/132
+            es.update(
+                self.get_index_name(),
+                self.get_mapping_type_name(),
+                self.id,
+                doc=doc,
+                upsert=doc
+            )
 
     def save(self, index=True, refresh=False, *args, **kwargs):
         result = super(PolymorphicIndexable, self).save(*args, **kwargs)
@@ -337,3 +343,40 @@ class PolymorphicIndexable(object):
         self._index = index
         return result
 
+
+# TODO: find this a nice home
+from celery.messaging import establish_connection
+from kombu.compat import Publisher  # NOTE: maybe update to kombu.messaging Producer
+
+
+def index_via_rmq_river(instance):
+    """Index this indexable instance via the RabbitMQ river."""
+    es = instance.get_es()
+    es_url, _ = es.servers.get()
+    bulk_endpoint = "%s/_bulk" % es_url
+    payload = []
+    meta = {
+        "update": {
+            "_index": instance.get_index_name(),
+            "_type": instance.get_mapping_type_name(),
+            "_id": instance.id,
+            "_retry_on_conflict": 3
+        }
+    }
+    data = {
+        "doc": instance.extract_document(),
+        "doc_as_upsert": True
+    }
+    payload.append(json.dumps(meta, cls=JsonEncoder, use_decimal=True))
+    payload.append(json.dumps(data, cls=JsonEncoder, use_decimal=True))
+    connection = establish_connection()
+    publisher = Publisher(
+        connection=connection,
+        exchange="elasticsearch",
+        routing_key="elasticsearch",
+        exchange_type="direct"
+    )
+    publisher.send("\n".join(payload) + "\n")
+    publisher.close()
+    connection.close()
+    

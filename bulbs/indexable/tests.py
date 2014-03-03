@@ -1,7 +1,8 @@
 from __future__ import absolute_import
 
-import datetime
 import copy
+import datetime
+import time
 
 from django.test import TestCase
 from django.core.management import call_command
@@ -262,3 +263,32 @@ class TestPolymorphicIndexableRegistry(TestCase):
             result_classes.add(klass)
         self.assertEqual(desired_classes, result_classes)
 
+
+class TestRiverManagement(BaseIndexableTestCase):
+    MY_RIVER_CONF = {
+        "my_test_river": {
+            "type" : "dummy"
+        },
+        "another_test_river": {
+            "type" : "dummy"
+        }
+    }
+
+    def test_management_command(self):
+        call_command("es_manage_rivers")
+        time.sleep(1.0)
+        rivers_conf = settings.ES_RIVERS
+        rivers_conf.update(self.MY_RIVER_CONF)
+        call_command("es_manage_rivers")
+        time.sleep(1.0)
+        # confirm rivers were added:
+        doc_types = self.MY_RIVER_CONF.keys()
+        result = self.es.count({}, index="_river", doc_type=doc_types)
+        self.assertNotEqual(result["count"], 0)
+        # try removing them
+        for doc_type in doc_types:
+            del rivers_conf[doc_type]
+        call_command("es_manage_rivers")
+        # confirm removal
+        result = self.es.count({}, index="_river", doc_type=doc_types)
+        self.assertEqual(result["count"], 0)

@@ -27,3 +27,5 @@ ES_SETTINGS = {
         }
     }
 }
+
+ES_RIVERS = {}
