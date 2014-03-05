@@ -7,6 +7,7 @@ env:
 install:
   - "pip install -q Django==$DJANGO_VERSION"
   - "pip install -r requirements-dev.txt"
+  - /usr/share/elasticsearch/bin/plugin -install elasticsearch/elasticsearch-river-rabbitmq/1.6.0
 services:
   - elasticsearch
   - postgresql
