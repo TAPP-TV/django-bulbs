@@ -8,7 +8,7 @@ class Migration(DataMigration):
 
     def forwards(self, orm):
         "Write your forwards methods here."
-        for content in orm.Content.objects.all():
+        for content in orm.Content.objects.exclude(image__isnull=True).exclude(image__exact=""):
             if content.image is not None and content.image.id != "":
                 try:
                     content._image.id = int(content.image.id)
