@@ -129,6 +129,7 @@ class ContentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Content
+        exclude = ("_image",)
 
     @transaction.commit_on_success
     def save(self, *args, **kwargs):
