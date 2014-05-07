@@ -27,9 +27,13 @@ class ImageFieldSerializer(serializers.WritableField):
         }
 
     def from_native(self, data):
+        if data is None:
+            return None
+
         image_id = data.get("id")
         if image_id is not None:
             return int(image_id)  # Just in case a string gets passed in
+
         return None
 
     def field_from_native(self, data, files, field_name, into):
