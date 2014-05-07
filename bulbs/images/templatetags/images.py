@@ -56,7 +56,7 @@ def cropped(context, image, ratio, width, format="jpg", alt=None):
         context['image_id'] = str(image)
     elif hasattr(image, "id"):
         context['image_url'] = crop_url(str(image.id), width=width, ratio=ratio, format=format)
-        context['image_id'] = image.id
+        context['image_id'] = str(image.id)
     elif image is None and DEFAULT_IMAGE:
         context['image_url'] = crop_url(image, width=width, ratio=ratio, format=format)
         context['image_id'] = DEFAULT_IMAGE
