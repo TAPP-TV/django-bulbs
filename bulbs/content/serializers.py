@@ -39,6 +39,9 @@ class ImageFieldSerializer(serializers.WritableField):
     def field_from_native(self, data, files, field_name, into):
         super(ImageFieldSerializer, self).field_from_native(data, files, field_name, into)
         image_data = data.get(field_name, {})
+        if image_data is None:
+            return
+
         if self.alt_field and "alt" in image_data:
             into[self.alt_field] = image_data["alt"]
 
