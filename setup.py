@@ -18,7 +18,7 @@ requires = [
     "Django>=1.4",
     "Pillow==1.7.8",
     "South==0.8.1",
-    "betty-cropper==0.1.16",
+    "betty-cropper==0.1.17",
     "django-elastimorphic==0.0.2",
     "django-json-field==0.5.5",
     "django_polymorphic==0.5.1",
