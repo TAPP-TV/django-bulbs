@@ -30,6 +30,8 @@ def cropped_url(image, ratio, width, format='jpg'):
         return crop_url(image.id, width=width, ratio=ratio, format=format)
     if isinstance(image, basestring):
         return crop_url(image, width=width, ratio=ratio, format=format)
+    elif isinstance(image, int):
+        return crop_url(str(image), width=width, ratio=ratio, format=format)
     if hasattr(image, "id"):
         return crop_url(str(image.id), width=width, ratio=ratio, format=format)
     raise TemplateSyntaxError(
@@ -49,6 +51,9 @@ def cropped(context, image, ratio, width, format="jpg", alt=None):
     elif isinstance(image, basestring):
         context['image_url'] = crop_url(image, width=width, ratio=ratio, format=format)
         context['image_id'] = image
+    elif isinstance(image, int):
+        context['image_url'] = crop_url(str(image), width=width, ratio=ratio, format=format)
+        context['image_id'] = image.id
     elif hasattr(image, "id"):
         context['image_url'] = crop_url(str(image.id), width=width, ratio=ratio, format=format)
         context['image_id'] = image.id
