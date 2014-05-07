@@ -64,6 +64,8 @@ def cropped(context, image, ratio, width, format="jpg", alt=None):
         raise TemplateSyntaxError(
             "You must use a RemoteImageField as the first argument to this tag.")
 
+    if hasattr(image, "alt"):
+        context['alt'] = image.alt
     context['ratio'] = ratio
     context['width'] = width
     template = select_template(["images/crop.html", "images/_crop.html"])
