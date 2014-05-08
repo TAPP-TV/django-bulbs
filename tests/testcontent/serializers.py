@@ -8,7 +8,6 @@ class TestContentObjSerializer(ContentSerializer):
 
     class Meta:
         model = TestContentObj
-        exclude = ("_image",)
 
 
 class TestContentObjTwoSerializer(ContentSerializer):
@@ -16,4 +15,3 @@ class TestContentObjTwoSerializer(ContentSerializer):
 
     class Meta:
         model = TestContentObjTwo
-        exclude = ("_image",)
