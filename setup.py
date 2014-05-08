@@ -16,7 +16,6 @@ author_email = 'csinchok@theonion.com'
 license = 'BSD'
 requires = [
     "Django>=1.4",
-    "Pillow==1.7.8",
     "South==0.8.1",
     "betty-cropper==0.1.21",
     "django-elastimorphic==0.0.2",
