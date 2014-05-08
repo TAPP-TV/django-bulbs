@@ -10,10 +10,7 @@ from django.template.defaultfilters import slugify
 from django.utils import timezone
 from django.utils.html import strip_tags
 
-from betty.cropped.fields import ImageField
-
 from bulbs.content import TagCache
-from bulbs.images.fields import RemoteImageField
 from elasticutils import SearchResults, S, F
 from elasticutils.contrib.django import get_es
 from elastimorphic.base import (
@@ -24,6 +21,8 @@ from elastimorphic.base import (
 from polymorphic import PolymorphicModel, PolymorphicManager
 
 from .shallow import ShallowContentS, ShallowContentResult
+
+from betty.cropped.fields import ImageField
 
 try:
     from bulbs.content.tasks import index as index_task  # noqa
@@ -177,7 +176,6 @@ class Content(PolymorphicIndexable, PolymorphicModel):
     title = models.CharField(max_length=512)
     slug = models.SlugField(blank=True, default='')
     description = models.TextField(max_length=1024, blank=True, default='')
-    old_image = RemoteImageField(max_length=512, null=True, blank=True)
     image = ImageField(null=True, blank=True)
 
     authors = models.ManyToManyField(settings.AUTH_USER_MODEL)

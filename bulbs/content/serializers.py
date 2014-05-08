@@ -150,7 +150,6 @@ class ContentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Content
-        exclude = ("old_image", "detail_image_caption", "detail_image_alt")
 
     @transaction.commit_on_success
     def save(self, *args, **kwargs):
