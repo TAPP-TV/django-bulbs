@@ -25,10 +25,10 @@ class Migration(SchemaMigration):
     def forwards(self, orm):
 
         # Changing field 'Content.subhead'
-        db.alter_column(u'content_content', 'subhead', self.gf('django.db.models.fields.CharField')(max_length=255, default=""))
+        db.alter_column(u'content_content', 'subhead', self.gf('django.db.models.fields.CharField')(max_length=255))
 
         # Changing field 'Content.feature_type'
-        db.alter_column(u'content_content', 'feature_type', self.gf('django.db.models.fields.CharField')(max_length=255, default=""))
+        db.alter_column(u'content_content', 'feature_type', self.gf('django.db.models.fields.CharField')(max_length=255))
 
     def backwards(self, orm):
 
