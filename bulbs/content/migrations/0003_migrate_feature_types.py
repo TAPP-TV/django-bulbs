@@ -31,7 +31,7 @@ class Migration(DataMigration):
             try:
                 ft = orm.FeatureType.objects.get(slug=slugify(feature_type))
             except orm.FeatureType.DoesNotExist:
-                ft = orm.FeatureType.objects.get_or_create(
+                ft = orm.FeatureType.objects.create(
                     name=feature_type,
                     slug=slugify(feature_type)
                 )
