@@ -28,7 +28,7 @@ class Migration(DataMigration):
         rows = db.execute("select distinct feature_type from content_content")
         for row in rows:
             feature_type = row[0]
-            ft = orm.FeatureType.objects.get_or_create(
+            ft, created = orm.FeatureType.objects.get_or_create(
                 name=feature_type,
                 slug=slugify(feature_type)
             )
