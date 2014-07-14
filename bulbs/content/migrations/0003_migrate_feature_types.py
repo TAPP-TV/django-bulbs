@@ -28,10 +28,13 @@ class Migration(DataMigration):
         rows = db.execute("select distinct feature_type from content_content")
         for row in rows:
             feature_type = row[0]
-            ft, created = orm.FeatureType.objects.get_or_create(
-                name=feature_type,
-                slug=slugify(feature_type)
-            )
+            try:
+                ft = orm.FeatureType.objects.get(slug=slugify(feature_type))
+            except orm.FeatureType.DoesNotExist:
+                ft = orm.FeatureType.objects.get_or_create(
+                    name=feature_type,
+                    slug=slugify(feature_type)
+                )
             db.execute("update content_content set feature_type_id = %s where feature_type = %s", [ft.id, feature_type])
 
         # Note: Don't use "from appname.models import ModelName". 
