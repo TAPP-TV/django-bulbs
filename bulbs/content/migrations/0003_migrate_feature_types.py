@@ -5,18 +5,37 @@ from south.v2 import DataMigration
 from django.db import models
 from django.utils.text import slugify
 
+# Safe User import for Django < 1.5
+try:
+    from django.contrib.auth import get_user_model
+except ImportError:
+    from django.contrib.auth.models import User
+else:
+    User = get_user_model()
+
+
+# With the default User model these will be 'auth.User' and 'auth.user'
+# so instead of using orm['auth.User'] we can use orm[user_orm_label]
+user_orm_label = '%s.%s' % (User._meta.app_label, User._meta.object_name)
+user_model_label = '%s.%s' % (User._meta.app_label, User._meta.module_name)
+
+
 class Migration(DataMigration):
 
     def forwards(self, orm):
         "Write your forwards methods here."
 
-        feature_types = db.execute("select distinct feature_type from content_content")
-        for feature_type in feature_types:
-            ft = orm.FeatureType.objects.get_or_create(
-                name=feature_type,
-                slug=slugify(feature_type)
-            )
-            db.execute("update content_content set feature_type_d = %s where feature_type = '%s'", [ft.id, feature_type])
+        rows = db.execute("select distinct feature_type from content_content")
+        for row in rows:
+            feature_type = row[0]
+            try:
+                ft = orm.FeatureType.objects.get(slug=slugify(feature_type))
+            except orm.FeatureType.DoesNotExist:
+                ft = orm.FeatureType.objects.create(
+                    name=feature_type,
+                    slug=slugify(feature_type)
+                )
+            db.execute("update content_content set feature_type_id = %s where feature_type = %s", [ft.id, feature_type])
 
         # Note: Don't use "from appname.models import ModelName". 
         # Use orm.ModelName to refer to models in this application,
@@ -33,7 +52,7 @@ class Migration(DataMigration):
         u'content.content': {
             'Meta': {'object_name': 'Content'},
             '_thumbnail': ('djbetty.fields.ImageField', [], {'default': 'None', 'null': 'True', 'blank': 'True'}),
-            'authors': ('django.db.models.fields.related.ManyToManyField', [], {'to': u"orm['%s']" % user_model_label, 'symmetrical': 'False'}),
+            'authors': ('django.db.models.fields.related.ManyToManyField', [], {'to': u"orm['%s']" % user_orm_label, 'symmetrical': 'False'}),
             'description': ('django.db.models.fields.TextField', [], {'default': "''", 'max_length': '1024', 'blank': 'True'}),
             'feature_type': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['content.FeatureType']", 'null': 'True', 'blank': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
@@ -59,7 +78,7 @@ class Migration(DataMigration):
             'content_type': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'change_logs'", 'null': 'True', 'to': u"orm['contenttypes.ContentType']"}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'object_id': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
-            'user': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'change_logs'", 'null': 'True', 'to': u"orm['%s']" % user_model_label})
+            'user': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'change_logs'", 'null': 'True', 'to': u"orm['%s']" % user_orm_label})
         },
         u'content.tag': {
             'Meta': {'object_name': 'Tag'},

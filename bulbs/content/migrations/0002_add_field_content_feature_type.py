@@ -23,6 +23,12 @@ user_model_label = '%s.%s' % (User._meta.app_label, User._meta.module_name)
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
+        db.create_table(u'content_featuretype', (
+            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('name', self.gf('django.db.models.fields.CharField')(max_length=255)),
+            ('slug', self.gf('django.db.models.fields.SlugField')(unique=True, max_length=50)),
+        ))
+        db.send_create_signal(u'content', ['FeatureType'])
         # Adding field 'Content.feature_type'
         db.add_column(u'content_content', 'feature_type',
                       self.gf('django.db.models.fields.related.ForeignKey')(to=orm['content.FeatureType'], null=True, blank=True),
@@ -32,6 +38,7 @@ class Migration(SchemaMigration):
     def backwards(self, orm):
         # Deleting field 'Content.feature_type'
         db.delete_column(u'content_content', 'feature_type_id')
+        db.delete_table(u'content_featuretype')
 
 
     models = {
@@ -42,7 +49,7 @@ class Migration(SchemaMigration):
         u'content.content': {
             'Meta': {'object_name': 'Content'},
             '_thumbnail': ('djbetty.fields.ImageField', [], {'default': 'None', 'null': 'True', 'blank': 'True'}),
-            'authors': ('django.db.models.fields.related.ManyToManyField', [], {'to': u"orm['%s']" % user_model_label, 'symmetrical': 'False'}),
+            'authors': ('django.db.models.fields.related.ManyToManyField', [], {'to': u"orm['%s']" % user_orm_label, 'symmetrical': 'False'}),
             'description': ('django.db.models.fields.TextField', [], {'default': "''", 'max_length': '1024', 'blank': 'True'}),
             'feature_type': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['content.FeatureType']", 'null': 'True', 'blank': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
@@ -68,7 +75,7 @@ class Migration(SchemaMigration):
             'content_type': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'change_logs'", 'null': 'True', 'to': u"orm['contenttypes.ContentType']"}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'object_id': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
-            'user': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'change_logs'", 'null': 'True', 'to': u"orm['%s']" % user_model_label})
+            'user': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'change_logs'", 'null': 'True', 'to': u"orm['%s']" % user_orm_label})
         },
         u'content.tag': {
             'Meta': {'object_name': 'Tag'},
