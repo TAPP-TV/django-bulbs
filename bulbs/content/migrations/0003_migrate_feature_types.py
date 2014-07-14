@@ -25,8 +25,9 @@ class Migration(DataMigration):
     def forwards(self, orm):
         "Write your forwards methods here."
 
-        feature_types = db.execute("select distinct feature_type from content_content")
-        for feature_type in feature_types:
+        rows = db.execute("select distinct feature_type from content_content")
+        for row in rows:
+            feature_type = row[0]
             ft = orm.FeatureType.objects.get_or_create(
                 name=feature_type,
                 slug=slugify(feature_type)
