@@ -32,7 +32,7 @@ class Migration(DataMigration):
                 name=feature_type,
                 slug=slugify(feature_type)
             )
-            db.execute("update content_content set feature_type_d = %s where feature_type = %s", [ft.id, feature_type])
+            db.execute("update content_content set feature_type_id = %s where feature_type = %s", [ft.id, feature_type])
 
         # Note: Don't use "from appname.models import ModelName". 
         # Use orm.ModelName to refer to models in this application,
