@@ -23,6 +23,12 @@ user_model_label = '%s.%s' % (User._meta.app_label, User._meta.module_name)
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
+        db.create_table(u'content_featuretype', (
+            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('name', self.gf('django.db.models.fields.CharField')(max_length=255)),
+            ('slug', self.gf('django.db.models.fields.SlugField')(unique=True, max_length=50)),
+        ))
+        db.send_create_signal(u'content', ['FeatureType'])
         # Adding field 'Content.feature_type'
         db.add_column(u'content_content', 'feature_type',
                       self.gf('django.db.models.fields.related.ForeignKey')(to=orm['content.FeatureType'], null=True, blank=True),
@@ -32,6 +38,7 @@ class Migration(SchemaMigration):
     def backwards(self, orm):
         # Deleting field 'Content.feature_type'
         db.delete_column(u'content_content', 'feature_type_id')
+        db.delete_table(u'content_featuretype')
 
 
     models = {
