@@ -10,7 +10,7 @@ from django.template.defaultfilters import slugify
 from django.utils import timezone
 from django.utils.html import strip_tags
 
-from bulbs.content import TagCache, get_content_fields_model
+from bulbs.content import TagCache
 import elasticsearch
 from elasticutils import SearchResults, S, F
 from elasticutils.contrib.django import get_es
@@ -178,12 +178,8 @@ class ContentManager(SearchManager):
         return ret
 
 
-class ContentFields(models.Model):
-    """
-    Make the fields that are on the base content model abstract
-    so that other needs can be overridden easily, for example
-    if we need to restrict content for sites
-    """
+class Content(PolymorphicIndexable, PolymorphicModel):
+    """The base content model from which all other content derives."""
     published = models.DateTimeField(blank=True, null=True)
     last_modified = models.DateTimeField(auto_now=True, default=timezone.now)
     title = models.CharField(max_length=512)
@@ -199,13 +195,8 @@ class ContentFields(models.Model):
 
     indexed = models.BooleanField(default=True)  # Should this item be indexed?
 
-    class Meta:
-        abstract = True
-
-content_fields_model = get_content_fields_model()
-class Content(PolymorphicIndexable, PolymorphicModel, content_fields_model):
-    """The base content model from which all other content derives."""
     _readonly = False  # Is this a read only model? (i.e. from elasticsearch)
+
     search_objects = ContentManager()
 
     def __unicode__(self):
