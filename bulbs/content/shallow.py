@@ -116,6 +116,8 @@ class ShallowContentResult(ShallowObject):
         else:
             self.published = None
 
+        self.site_id = _source.get("site_id")
+
         self.feature_type = ShallowFeatureType(
             _source.get('feature_type').get('name'),
             slug=_source.get('feature_type').get('slug'))

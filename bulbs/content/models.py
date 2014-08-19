@@ -10,6 +10,10 @@ from django.template.defaultfilters import slugify
 from django.utils import timezone
 from django.utils.html import strip_tags
 
+from mezzanine.core.models import SiteRelated
+from mezzanine.core.fields import FileField
+from mezzanine.utils.models import upload_to
+
 from bulbs.content import TagCache
 import elasticsearch
 from elasticutils import SearchResults, S, F
@@ -23,7 +27,7 @@ from polymorphic import PolymorphicModel, PolymorphicManager
 
 from .shallow import ShallowContentS, ShallowContentResult
 
-from djbetty import ImageField
+#from djbetty import ImageField
 
 try:
     from bulbs.content.tasks import index as index_task  # noqa
@@ -55,6 +59,7 @@ class Tag(PolymorphicIndexable, PolymorphicModel):
         props = super(Tag, cls).get_mapping_properties()
         props.update({
             "name": {"type": "string", "analyzer": "autocomplete"},
+            "site_id": {"type": "integer"},
             "slug": {"type": "string", "index": "not_analyzed"},
             "type": {"type": "string", "index": "not_analyzed"}
         })
@@ -75,16 +80,18 @@ class Tag(PolymorphicIndexable, PolymorphicModel):
         return TagSerializer
 
 
-class FeatureType(models.Model):
+class FeatureType(SiteRelated):
     name = models.CharField(max_length=255)
-    slug = models.SlugField(unique=True)
+    slug = models.SlugField()
+
+    class Meta:
+        unique_together = (('slug', 'site'), )
 
     def __unicode__(self):
         return self.name
 
 
 class ContentManager(SearchManager):
-
     def s(self):
         """Returns a ShallowContentS() instance, using an ES URL from the settings, and an index
         from this manager's model"""
@@ -135,6 +142,10 @@ class ContentManager(SearchManager):
             results = results.filter(status=kwargs.get("status"))
 
         f = F()
+
+        # only return items on the current site
+        f &= F(site_id=settings.SITE_ID)
+
         for tag in kwargs.get("tags", []):
             if tag.startswith("-"):
                 f &= ~F(**{"tags.slug": tag[1:]})
@@ -178,14 +189,24 @@ class ContentManager(SearchManager):
         return ret
 
 
-class Content(PolymorphicIndexable, PolymorphicModel):
+class SitePolymorphicManager(PolymorphicManager):
+    """
+    Restrict default queryset for content to the current site
+    """
+    def get_queryset(self):
+        return self.queryset_class(self.model, using=self._db).filter(site_id=settings.SITE_ID)
+    
+
+class Content(PolymorphicIndexable, PolymorphicModel, SiteRelated): # SiteRelated adds on-save code to set site
     """The base content model from which all other content derives."""
     published = models.DateTimeField(blank=True, null=True)
     last_modified = models.DateTimeField(auto_now=True, default=timezone.now)
     title = models.CharField(max_length=512)
     slug = models.SlugField(blank=True, default='')
     description = models.TextField(max_length=1024, blank=True, default="")
-    _thumbnail = ImageField(null=True, blank=True, editable=False)
+    featured_image = FileField(verbose_name="Featured Image",
+        upload_to=upload_to("content.Content.featured_image", "content"),
+        format="Image", max_length=255, null=True, blank=True)
 
     authors = models.ManyToManyField(settings.AUTH_USER_MODEL)
     feature_type = models.ForeignKey(FeatureType, null=True, blank=True)
@@ -194,30 +215,13 @@ class Content(PolymorphicIndexable, PolymorphicModel):
     tags = models.ManyToManyField(Tag, blank=True)
 
     indexed = models.BooleanField(default=True)  # Should this item be indexed?
-
     _readonly = False  # Is this a read only model? (i.e. from elasticsearch)
 
+    objects = SitePolymorphicManager()
     search_objects = ContentManager()
 
     def __unicode__(self):
         return '%s: %s' % (self.__class__.__name__, self.title)
-
-    @property
-    def thumbnail(self):
-        if self._thumbnail.id is not None:
-            return self._thumbnail
-
-        for field in self._meta.fields:
-            if isinstance(field, ImageField):
-                field_value = getattr(self, field.name)
-                if field_value.id is not None:
-                    return field_value
-
-        return self._thumbnail
-
-    @thumbnail.setter
-    def thumbnail(self, value):
-        self._thumbnail = value
 
     def get_absolute_url(self):
         try:
@@ -274,8 +278,9 @@ class Content(PolymorphicIndexable, PolymorphicModel):
             "last_modified": {"type": "date"},
             "title": {"type": "string", "analyzer": "snowball", "_boost": 2.0},
             "slug": {"type": "string"},
+            "site_id": {"type": "integer"},
             "description": {"type": "string", },
-            "thumbnail": {"type": "integer"},
+            "featured_image": {"type": "string"},
             "feature_type": {
                 "properties": {
                     "name": {
@@ -311,8 +316,9 @@ class Content(PolymorphicIndexable, PolymorphicModel):
             "last_modified"    : self.last_modified,
             "title"            : self.title,
             "slug"             : self.slug,
+            "site_id"          : self.site_id,
             "description"      : self.description,
-            "thumbnail"        : self.thumbnail.id if self.thumbnail else None,
+            "featured_image"   : str(self.featured_image),
             "authors": [{
                 "first_name": author.first_name,
                 "id"        : author.id,
@@ -332,7 +338,7 @@ class Content(PolymorphicIndexable, PolymorphicModel):
 
     @classmethod
     def get_serializer_class(cls):
-        from .serializers import ContentSerializer
+        from tappestry.content.serializers import ContentSerializer
         return ContentSerializer
 
 
