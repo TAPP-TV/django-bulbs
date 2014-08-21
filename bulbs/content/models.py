@@ -141,11 +141,9 @@ class ContentManager(SearchManager):
         if "status" in kwargs:
             results = results.filter(status=kwargs.get("status"))
 
+        results = results.filter(site_id=settings.SITE_ID)
+
         f = F()
-
-        # only return items on the current site
-        f &= F(site_id=settings.SITE_ID)
-
         for tag in kwargs.get("tags", []):
             if tag.startswith("-"):
                 f &= ~F(**{"tags.slug": tag[1:]})
@@ -163,7 +161,7 @@ class ContentManager(SearchManager):
                 f &= ~F(**{"authors.username": author})
             else:
                 f |= F(**{"authors.username": author})
-
+        
         results = results.filter(f)
 
         # only use valid subtypes
