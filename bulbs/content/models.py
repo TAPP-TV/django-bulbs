@@ -218,6 +218,9 @@ class Content(PolymorphicIndexable, PolymorphicModel, SiteRelated): # SiteRelate
     objects = SitePolymorphicManager()
     search_objects = ContentManager()
 
+    class Meta:
+        permissions = (('view_api_content', "View Content via api"), )        
+
     def __unicode__(self):
         return '%s: %s' % (self.__class__.__name__, self.title)
 
