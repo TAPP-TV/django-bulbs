@@ -138,7 +138,7 @@ class ContentManager(SearchManager):
             if kwargs.get("published", True) and not "status" in kwargs:  # TODO: kill this "published" param. it sucks
                 now = timezone.now()
                 long_time_ago = now - datetime.timedelta(days=36500)
-                results = results.query(published__range=(now, long_time_ago), must=True)
+                results = results.query(published__range=(long_time_ago, now), must=True)
                 #results = results.query(published__lte=now, must=True)
 
         if "status" in kwargs:
