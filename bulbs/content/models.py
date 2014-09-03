@@ -1,5 +1,6 @@
 """Base models for "Content", including the indexing and search features
 that we want any piece of content to have."""
+import datetime
 
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
@@ -136,7 +137,9 @@ class ContentManager(SearchManager):
         else:
             if kwargs.get("published", True) and not "status" in kwargs:  # TODO: kill this "published" param. it sucks
                 now = timezone.now()
-                results = results.query(published__lte=now, must=True)
+                long_time_ago = now - datetime.timedelta(days=36500)
+                results = results.query(published__range=(now, long_time_ago), must=True)
+                #results = results.query(published__lte=now, must=True)
 
         if "status" in kwargs:
             results = results.filter(status=kwargs.get("status"))
