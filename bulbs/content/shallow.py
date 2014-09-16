@@ -118,9 +118,16 @@ class ShallowContentResult(ShallowObject):
 
         self.site_id = _source.get("site_id")
 
-        self.feature_type = ShallowFeatureType(
-            _source.get('feature_type').get('name'),
-            slug=_source.get('feature_type').get('slug'))
+        # feature type is nullable
+        feature_type = _source.get('feature_type')
+        if feature_type:
+            self.feature_type = ShallowFeatureType(
+                feature_type.get('name'),
+                slug=feature_type.get('slug'))
+        else:
+            self.feature_type = ShallowFeatureType('', slug='')
+        
+        self._source = _source # pass along source as a hack to get extra fields for now
         super(ShallowContentResult, self).__init__(_source)
 
     def __unicode__(self):
