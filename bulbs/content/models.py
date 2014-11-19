@@ -153,6 +153,9 @@ class ContentManager(SearchManager):
             else:
                 f |= F(**{"tags.slug": tag})
 
+        # make tag filters and feature/author "and" relationship instead of "or"
+        results = results.filter(f)
+        f = F()
         for feature_type in kwargs.get("feature_types", []):
             if feature_type.startswith("-"):
                 f &= ~F(**{"feature_type.slug": feature_type[1:]})
