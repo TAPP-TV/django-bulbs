@@ -45,9 +45,6 @@ class Tag(PolymorphicIndexable, PolymorphicModel):
 
     search_objects = SearchManager()
 
-    class Meta:
-        db_table = "content_tag"
-
     def __unicode__(self):
         return '%s: %s' % (self.__class__.__name__, self.name)
 
@@ -90,7 +87,6 @@ class FeatureType(SiteRelated):
 
     class Meta:
         unique_together = (('slug', 'site'), )
-        db_table = "content_featuretype"
 
     def __unicode__(self):
         return self.name
@@ -230,7 +226,6 @@ class Content(PolymorphicIndexable, PolymorphicModel, SiteRelated): # SiteRelate
 
     class Meta:
         permissions = (('view_api_content', "View Content via api"), )        
-        db_table = "content_content"
 
     def __unicode__(self):
         return '%s: %s' % (self.__class__.__name__, self.title)

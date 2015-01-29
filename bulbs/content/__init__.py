@@ -11,5 +11,3 @@ class TagCache:
             cnt = Content.search_objects.query(**{"tags.slug": slug}).count()
             cls._cache[slug] = cnt
         return cnt
-
-default_app_config = "bulbs.content.apps.ContentConfig"

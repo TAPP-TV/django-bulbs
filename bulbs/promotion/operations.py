@@ -19,7 +19,7 @@ class ContentListOperation(PolymorphicModel):
 class InsertOperation(ContentListOperation):
 
     index = models.IntegerField(default=0)
-    content = models.ForeignKey("contentbase.Content", related_name="+")
+    content = models.ForeignKey("content.Content", related_name="+")
     lock = models.BooleanField(default=False)
     
     def apply(self, data):
@@ -37,8 +37,8 @@ class InsertOperation(ContentListOperation):
 
 class ReplaceOperation(ContentListOperation):
 
-    content = models.ForeignKey("contentbase.Content", related_name="+")
-    target = models.ForeignKey("contentbase.Content", related_name="+")
+    content = models.ForeignKey("content.Content", related_name="+")
+    target = models.ForeignKey("content.Content", related_name="+")
     lock = models.BooleanField(default=False)
 
     def apply(self, data):
@@ -59,7 +59,7 @@ class ReplaceOperation(ContentListOperation):
 
 class LockOperation(ContentListOperation):
 
-    target = models.ForeignKey("contentbase.Content", related_name="+")
+    target = models.ForeignKey("content.Content", related_name="+")
 
     def apply(self, data):
         for index, item in enumerate(data):
@@ -73,7 +73,7 @@ class LockOperation(ContentListOperation):
 
 class UnlockOperation(ContentListOperation):
 
-    target = models.ForeignKey("contentbase.Content", related_name="+")
+    target = models.ForeignKey("content.Content", related_name="+")
 
     def apply(self, data):
         for index, item in enumerate(data):
