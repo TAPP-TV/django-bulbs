@@ -43,7 +43,6 @@ class Tag(PolymorphicIndexable, PolymorphicModel):
     name = models.CharField(max_length=255)
     slug = models.SlugField(unique=True)
 
-    objects = models.Manager() # don't use polymorphic manager because it doesn't work...
     search_objects = SearchManager()
 
     class Meta:
