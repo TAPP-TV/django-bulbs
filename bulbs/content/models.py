@@ -253,6 +253,7 @@ class Content(PolymorphicIndexable, PolymorphicModel, SiteRelated): # SiteRelate
             if legacy_image:
                 from tappestry.images.models import Image
                 self._featured_image = Image.objects.create(image=legacy_image.name)
+                self.save()
             return self._legacy_featured_image
 
     @featured_image.setter
