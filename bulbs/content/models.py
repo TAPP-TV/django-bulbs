@@ -212,10 +212,21 @@ class Content(PolymorphicIndexable, PolymorphicModel, SiteRelated): # SiteRelate
     title = models.CharField(max_length=512)
     slug = models.SlugField(blank=True, default='')
     description = models.TextField(max_length=1024, blank=True, default="")
-    featured_image = FileField(verbose_name="Featured Image",
-        upload_to=upload_to("content.Content.featured_image", "content"),
-        format="Image", max_length=255, null=True, blank=True)
 
+    moderation = models.IntegerField(db_index=True, default=2,
+                                     choices=((0, 'bad'),
+                                              (1, 'flagged'),
+                                              (2, 'unmoderated'),
+                                              (3, 'promoted'), 
+                                              (4, 'featured'),
+                                              (5, 'premium')))
+
+    _featured_image = models.ForeignKey("images.Image", null=True, blank=True, db_column="featured_image_id")
+    _legacy_featured_image = FileField(verbose_name="Featured Image",
+                                       upload_to=upload_to("content.Content.featured_image", "content"),
+                                       format="Image", max_length=255, null=True, blank=True,
+                                       db_column="featured_image")
+                                        
     authors = models.ManyToManyField(settings.AUTH_USER_MODEL)
     feature_type = models.ForeignKey(FeatureType, null=True, blank=True)
     subhead = models.CharField(max_length=255, blank=True, default="")
@@ -231,6 +242,34 @@ class Content(PolymorphicIndexable, PolymorphicModel, SiteRelated): # SiteRelate
     class Meta:
         permissions = (('view_api_content', "View Content via api"), )        
         db_table = "content_content"
+
+    @property
+    def featured_image(self):
+        if self._featured_image:
+            return self._featured_image.image
+        else:
+            # copy the legacy featured image into a new _featured_image
+            legacy_image = self._legacy_featured_image
+            if legacy_image:
+                from tappestry.images.models import Image
+                self._featured_image = Image.objects.create(image=legacy_image.name)
+            return self._legacy_featured_image
+
+    @featured_image.setter
+    def featured_image(self, value):
+        from tappestry.images.models import Image
+        if isinstance(value, int):
+            self._featured_image_id = value
+        elif isinstance(value, Image):
+            # override featured image FK
+            self._featured_image = value
+        else:
+            # assume that the object assigned here is a file field
+            if not self._featured_image_id:
+                image = Image.objects.create(image=value.name)
+                self._featured_image = image
+            else:
+                self._featured_image.image = image
 
     def __unicode__(self):
         return '%s: %s' % (self.__class__.__name__, self.title)
@@ -305,6 +344,7 @@ class Content(PolymorphicIndexable, PolymorphicModel, SiteRelated): # SiteRelate
                     "slug": {"type": "string", "index": "not_analyzed"}
                 }
             },
+            "moderation": {"type": "integer"},
             "authors": {
                 "properties": {
                     "first_name": {"type": "string"},
@@ -330,6 +370,7 @@ class Content(PolymorphicIndexable, PolymorphicModel, SiteRelated): # SiteRelate
             "slug"             : self.slug,
             "site_id"          : self.site_id,
             "description"      : self.description,
+            "moderation"       : self.moderation,
             "featured_image"   : str(self.featured_image),
             "authors": [{
                 "first_name": author.first_name,
