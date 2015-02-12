@@ -217,9 +217,10 @@ class Content(PolymorphicIndexable, PolymorphicModel, SiteRelated): # SiteRelate
                                      choices=((0, 'bad'),
                                               (1, 'flagged'),
                                               (2, 'unmoderated'),
-                                              (3, 'promoted'), 
-                                              (4, 'featured'),
-                                              (5, 'premium')))
+                                              (3, 'approved'),
+                                              (4, 'promoted'), 
+                                              (5, 'featured'),
+                                              (6, 'premium')))
 
     _featured_image = models.ForeignKey("images.Image", null=True, blank=True, db_column="featured_image_id")
     _legacy_featured_image = FileField(verbose_name="Featured Image",
