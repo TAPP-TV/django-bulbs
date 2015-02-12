@@ -228,7 +228,7 @@ class Content(PolymorphicIndexable, PolymorphicModel, SiteRelated): # SiteRelate
                                        format="Image", max_length=255, null=True, blank=True,
                                        db_column="featured_image")
                                         
-    authors = models.ManyToManyField(settings.AUTH_USER_MODEL)
+    authors = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True)
     feature_type = models.ForeignKey(FeatureType, null=True, blank=True)
     subhead = models.CharField(max_length=255, blank=True, default="")
 
