@@ -245,6 +245,10 @@ class Content(PolymorphicIndexable, PolymorphicModel, SiteRelated): # SiteRelate
         db_table = "content_content"
 
     @property
+    def disqus_id(self):
+        return "%s-%s" % (self.type, self.pk)
+
+    @property
     def featured_image(self):
         if self._featured_image:
             return self._featured_image.image
