@@ -165,6 +165,12 @@ class ContentManager(SearchManager):
                 f &= ~F(**{"feature_type.slug": feature_type[1:]})
             else:
                 f |= F(**{"feature_type.slug": feature_type})
+        results = results.filter(f)
+
+        # make sure the moderation values are in the requested range
+        moderation = kwargs.get("moderation", 6)
+        moderation_max = kwargs.get("moderation_max", 6)
+        results = results.filter(moderation__range=(moderation, moderation_max))
 
         for author in kwargs.get("authors", []):
             if author.startswith("-"):
