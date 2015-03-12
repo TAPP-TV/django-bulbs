@@ -375,6 +375,10 @@ class Content(PolymorphicIndexable, PolymorphicModel, SiteRelated): # SiteRelate
 
     def extract_document(self):
         data = super(Content, self).extract_document()
+        if self.featured_image:
+            featured_image = str(self.featured_image)
+        else:
+            featured_image = ''
         data.update({
             "published"        : self.published,
             "last_modified"    : self.last_modified,
@@ -383,7 +387,7 @@ class Content(PolymorphicIndexable, PolymorphicModel, SiteRelated): # SiteRelate
             "site_id"          : self.site_id,
             "description"      : self.description,
             "moderation"       : self.moderation,
-            "featured_image"   : str(self.featured_image),
+            "featured_image"   : featured_image,
             "authors": [{
                 "first_name": author.first_name,
                 "id"        : author.id,
