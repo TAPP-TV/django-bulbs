@@ -235,6 +235,9 @@ class Content(PolymorphicIndexable, PolymorphicModel, SiteRelated): # SiteRelate
                                        db_column="featured_image")
                                         
     authors = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True)
+    if 'tappestry.stars' in settings.INSTALLED_APPS:
+        stars = models.ManyToManyField('stars.Star', blank=True)
+
     feature_type = models.ForeignKey(FeatureType, null=True, blank=True)
     subhead = models.CharField(max_length=255, blank=True, default="")
 
